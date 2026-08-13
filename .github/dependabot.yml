@@ -1,0 +1,21 @@
+# Version updates for the build toolchain.
+#
+# Dependabot *security* updates are already enabled, but they will not take a
+# breaking major to patch a transitive dependency — which is what every open
+# alert here needs. Bumping the direct devDependencies on a schedule is what
+# actually retires them.
+#
+# Nothing here affects what ships: the plugin bundles its own source plus the
+# WASM engine, and `npm audit --omit=dev` reports zero vulnerabilities.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "*"
