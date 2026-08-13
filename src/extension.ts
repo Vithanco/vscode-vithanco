@@ -9,8 +9,17 @@ import { getRenderer } from './renderer';
 const cache = new Map<string, { ok: true; svg: string } | { ok: false; error: string }>();
 const inFlight = new Set<string>();
 
-function hashOf(source: string): string {
-    return createHash('sha1').update(source).digest('hex').slice(0, 16);
+function hashOf(source: string, darkMode: boolean): string {
+    const tag = darkMode ? ':d' : ':l';
+    return createHash('sha1').update(source + tag).digest('hex').slice(0, 16);
+}
+
+function isDarkTheme(): boolean {
+    const kind = vscode.window.activeColorTheme.kind;
+    return (
+        kind === vscode.ColorThemeKind.Dark ||
+        kind === vscode.ColorThemeKind.HighContrast
+    );
 }
 
 // Debounced preview refresh — many blocks finishing in quick succession
@@ -29,12 +38,16 @@ function scheduleRefresh(): void {
     }, 80);
 }
 
-async function renderInBackground(key: string, source: string): Promise<void> {
+async function renderInBackground(
+    key: string,
+    source: string,
+    darkMode: boolean,
+): Promise<void> {
     if (inFlight.has(key) || cache.has(key)) return;
     inFlight.add(key);
     try {
         const render = await getRenderer();
-        const svg = render(source);
+        const svg = await render(source, darkMode);
         cache.set(key, { ok: true, svg });
     } catch (err) {
         const error = err instanceof Error ? err.message : String(err);
@@ -96,14 +109,15 @@ function vglPlugin(md: MarkdownIt): void {
             }
 
             const source = token.content.trim();
-            const key = hashOf(source);
+            const darkMode = isDarkTheme();
+            const key = hashOf(source, darkMode);
             const cached = cache.get(key);
 
             if (cached?.ok) return svgHtml(cached.svg);
             if (cached && !cached.ok) return errorHtml(source, cached.error);
 
             // Not in cache — kick off background render, return placeholder.
-            void renderInBackground(key, source);
+            void renderInBackground(key, source, darkMode);
             return placeholderHtml(source);
         } catch (err) {
             // Never break the markdown render because of our plugin.
@@ -126,6 +140,13 @@ export function activate(context: vscode.ExtensionContext): {
     // Pre-warm the renderer so the first vgl block doesn't pay the full
     // init cost — but don't await it (activation must stay fast).
     void getRenderer().catch(() => undefined);
+
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveColorTheme(() => {
+            cache.clear();
+            scheduleRefresh();
+        }),
+    );
 
     context.subscriptions.push({
         dispose() {
