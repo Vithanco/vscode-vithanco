@@ -1,0 +1,59 @@
+VGraph
+Copyright 2024-2026 Klaus Kneupner, Vithanco
+
+This product includes software developed by Klaus Kneupner and contributors,
+licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The Vithanco name and logo are not licensed under Apache-2.0 and are not
+granted by section 6 of it. The artwork is all rights reserved by Vithanco: the
+files in graphics/, the mark's path data in
+Sources/VGraphSVG/Utils/WatermarkRenderer.swift and in the `vithanco` icon of
+Sources/VGraph/Domain/Icons/BuiltinIcons.swift, and its master copy in
+docs/design/. Permitted use is described in graphics/README.md.
+
+It also includes or links the following third-party works, each under its own
+license.
+
+Graphviz — https://graphviz.org
+  Compiled into the layout engine through swiftGraphviz
+  (https://github.com/Vithanco/swiftGraphviz, EPL-2.0), currently Graphviz
+  16.1.0. Graphviz is licensed under the Eclipse Public License 2.0; its source
+  is available from graphviz.org.
+
+DM Sans — https://github.com/googlefonts/dm-fonts
+  Copyright 2014 The DM Sans Project Authors. SIL Open Font License 1.1.
+  Bundled in fonts/; the license text is fonts/OFL.txt.
+  Its Bold outlines also form the letters in the `and`, `or` and `default`
+  icons (Sources/VGraph/Domain/Icons/BuiltinIcons.swift).
+
+librsvg — https://gitlab.gnome.org/GNOME/librsvg
+  LGPL-2.1-or-later. Installed from the distribution package (`librsvg2-bin`)
+  in the hosted server's container image and run as a separate process
+  (`rsvg-convert`) to turn SVG into PNG; it is not linked into VGraph.
+
+Swift runtime and Embedded Swift standard library — https://swift.org
+  Apache-2.0 with the Runtime Library Exception. Linked into every
+  VGraphWasm.wasm.
+
+@bjorn3/browser_wasi_shim — https://github.com/bjorn3/browser_wasi_shim
+  MIT or Apache-2.0. Runs the wasm module in browsers and Node.
+
+@resvg/resvg-wasm — https://github.com/yisibl/resvg-js
+  MPL-2.0. Turns SVG into PNG in the npm package.
+
+@modelcontextprotocol/sdk — https://github.com/modelcontextprotocol/typescript-sdk
+  MIT. MCP server in the npm package.
+
+Swift packages (Apache-2.0): swift-argument-parser, swift-atomics,
+swift-collections, swift-log, swift-nio, swift-system, swift-syntax,
+elementary, elementary-ui, carton, WasmTransformer.
+
+Swift packages (MIT): JavaScriptKit, eventsource.
+
+Model Context Protocol Swift SDK — https://github.com/modelcontextprotocol/swift-sdk
+  MIT for contributions made before the project's move to Apache-2.0,
+  Apache-2.0 afterwards; see its LICENSE.
+
+Source — https://github.com/Vithanco/VGraph
+  The engine is built from this repository; every package that embeds it
+  ships this NOTICE and the Apache-2.0 LICENSE.

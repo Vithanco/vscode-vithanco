@@ -4,7 +4,7 @@
   "description": "Render Vithanco Graph Language (VGL) diagrams inside VS Code's Markdown preview.",
   "version": "1.0.10",
   "publisher": "vithanco",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "author": "Klaus Kneupner",
   "homepage": "https://vithanco.com",
   "repository": {
