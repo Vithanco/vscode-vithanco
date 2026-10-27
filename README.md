@@ -23,9 +23,9 @@ vgraph decision: IBIS "Should we ship?" {
 Two extension points do the heavy lifting:
 
 - `markdown.markdownItPlugins` — a sync plugin in the extension host turns each `vgl` fence into a `<div class="vgraph-block" data-vgl="…">` placeholder.
-- `markdown.previewScripts` — a script bundled into the preview webview boots the VGraph WASM module and Graphviz once, then renders every placeholder in place.
+- `markdown.previewScripts` — a script bundled into the preview webview boots the VGraph WASM module once, then renders every placeholder in place.
 
-The `VGraphWasm.wasm` binary is embedded directly into the preview bundle (esbuild `binary` loader). The Graphviz layout engine (`@hpcc-js/wasm`) is bundled from `node_modules`. **No CDN dependencies, no per-document "allow content" prompts.**
+The `VGraphWasm.wasm` binary is embedded directly into the preview bundle (esbuild `binary` loader). Graphviz layout runs inside that module, so nothing else is bundled for it. **No CDN dependencies, no per-document "allow content" prompts.**
 
 ## Build
 
@@ -78,7 +78,7 @@ The monorepo copy at `vscode-vithanco/` is for development. To publish:
 2. From the standalone repo's root, run:
 
    ```bash
-   VGRAPH_REPO=~/private/swift/VGraph ./release.sh 0.1.1
+   VGRAPH_REPO=/path/to/VGraph ./release.sh 0.1.1
    ```
 
    The script refreshes `VGraphWasm.wasm` from the monorepo, bumps the
@@ -88,7 +88,7 @@ The monorepo copy at `vscode-vithanco/` is for development. To publish:
 3. To also publish to the VS Code Marketplace:
 
    ```bash
-   VGRAPH_REPO=~/private/swift/VGraph PUBLISH=1 ./release.sh 0.1.1
+   VGRAPH_REPO=/path/to/VGraph PUBLISH=1 ./release.sh 0.1.1
    ```
 
    Requires a publisher PAT in `$VSCE_PAT` or a logged-in `vsce` session
@@ -98,3 +98,15 @@ The monorepo copy at `vscode-vithanco/` is for development. To publish:
 
 - Reading view only. Editing a `vgl` block in source view shows the raw fence; switch to the preview to see the rendered diagram.
 - Desktop VS Code only (the Wasm module assumes a desktop runtime, like the sibling Obsidian plugin).
+
+## Acknowledgements
+
+- [Graphviz](https://graphviz.org/) (EPL-2.0) — layout engine, compiled into the WebAssembly module via [SwiftGraphviz](https://github.com/Vithanco/swiftGraphviz)
+- The [Swift](https://swift.org) runtime (Apache-2.0 with Runtime Library Exception) — linked into the WebAssembly module
+- [DM Sans](https://github.com/googlefonts/dm-fonts) (SIL OFL 1.1) — the typeface the diagrams use
+
+## Source and licence
+
+Engine source (Swift, MCP server, CLI): https://github.com/Vithanco/VGraph
+
+Apache-2.0 — see [LICENSE](LICENSE). Third-party components are listed in [NOTICE](NOTICE).
