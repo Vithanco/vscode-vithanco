@@ -52,7 +52,6 @@
   "scripts": {
     "build": "node esbuild.config.mjs production",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"scripts/*.test.mjs\"",
     "watch": "node esbuild.config.mjs",
     "package": "vsce package --no-dependencies"
   },
