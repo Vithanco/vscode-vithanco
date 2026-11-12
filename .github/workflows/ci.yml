@@ -1,0 +1,68 @@
+# Builds this extension against the VGraph engine. The sources import the engine's glue
+# from ../../website/Package, so the extension is checked out inside VGraph, as it is on
+# the maintainer's machine. It only checks: releases stay on that machine (VGraph ADR 0036).
+# Actions are pinned to a full commit SHA, as in VGraph.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build against the VGraph engine
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Vithanco/VGraph
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: vscode-vithanco
+          persist-credentials: false
+      # A build can pass while calling an export the engine no longer has.
+      - name: Every engine call still exists
+        run: ./scripts/check-plugin-api.sh
+      - name: Identify the engine
+        id: engine
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Restore the engine
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: website/Package
+          key: engine-${{ steps.engine.outputs.sha }}
+      # The container comes from VGraph's .swift-version, so a Swift bump there needs no change here.
+      - name: Build the engine
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work "swift:$(tr -d '[:space:]' < .swift-version)-noble" ./scripts/ci-engine.sh
+          sudo chown -R "$(id -u):$(id -g)" .
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Build and package the extension
+        working-directory: vscode-vithanco
+        run: |
+          npm ci
+          npm run typecheck
+          npm run build
+          npm run package
+      - name: The bundle holds an optimized engine
+        run: ./scripts/check-wasm-optimized.sh vscode-vithanco/VGraphWasm.wasm
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vscode-vithanco
+          if-no-files-found: error
+          path: vscode-vithanco/*.vsix
