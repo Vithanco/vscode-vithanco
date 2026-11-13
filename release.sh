@@ -8,6 +8,7 @@
 #   ./release.sh --minor          # auto minor bump (e.g. 0.1.0 → 0.2.0)
 #   ./release.sh --major          # auto major bump (e.g. 0.1.0 → 1.0.0)
 #   ./release.sh <version>        # explicit version (e.g. 0.1.4)
+#   ./release.sh --bump-only [..] # write the version only, build nothing
 #   VGRAPH_REPO=/path/to/VGraph ./release.sh [args]
 #
 # What it does:
@@ -30,7 +31,16 @@ cd "$SCRIPT_DIR"
 
 CURRENT=$(node -p "require('./package.json').version")
 
-ARG="${1:-}"
+# --bump-only writes the version and stops: VGraph's `just plugins-release`
+# bumps every consumer, and `just release` builds what ships.
+ARG=""
+BUMP_ONLY=0
+for a in "$@"; do
+    case "$a" in
+        --bump-only) BUMP_ONLY=1 ;;
+        *)           ARG="$a" ;;
+    esac
+done
 case "$ARG" in
     ""|--patch) BUMP=patch ;;
     --minor)    BUMP=minor ;;
@@ -62,6 +72,21 @@ fi
 
 echo "Bumping $CURRENT → $VERSION  ($BUMP)"
 
+set_version() {
+    node -e "
+const fs = require('fs');
+const j = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+j.version = '$VERSION';
+fs.writeFileSync('package.json', JSON.stringify(j, null, 2) + '\n');
+"
+}
+
+if [[ "$BUMP_ONLY" -eq 1 ]]; then
+    set_version
+    echo "✓ Bumped to $VERSION (nothing built)."
+    exit 0
+fi
+
 # ---- 2. (Optional) Copy VGraphWasm.wasm from the VGraph monorepo ----------
 
 if [[ -n "${VGRAPH_REPO:-}" ]]; then
@@ -89,12 +114,7 @@ if [[ ! -d node_modules ]]; then
     npm install --silent
 fi
 
-node -e "
-const fs = require('fs');
-const j = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-j.version = '$VERSION';
-fs.writeFileSync('package.json', JSON.stringify(j, null, 2) + '\n');
-"
+set_version
 
 # ---- 4. Build + package ---------------------------------------------------
 
