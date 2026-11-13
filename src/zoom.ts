@@ -118,4 +118,25 @@ export function bindZoom(block: HTMLElement, zoom: Zoom = 'fit', onChange: (zoom
         const now = partsOf(block);
         if (now) set(wheeled(shown(now), event.deltaY), event.clientX, event.clientY);
     }, { passive: false });
+
+    // Touch events rather than pointer events: cancelling the move is what keeps
+    // a two-finger gesture from the page on iOS, while one finger still scrolls.
+    let pinch: { spread: number; scale: number } | null = null;
+    const spreadOf = (t: TouchList): number => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    parts.viewport.addEventListener('touchstart', (event) => {
+        const now = partsOf(block);
+        const spread = event.touches.length === 2 ? spreadOf(event.touches) : 0;
+        pinch = now && spread > 0 ? { spread, scale: shown(now) } : null;
+    }, { passive: true });
+    parts.viewport.addEventListener('touchmove', (event) => {
+        if (!pinch || event.touches.length !== 2) return;
+        event.preventDefault();
+        const [a, b] = [event.touches[0], event.touches[1]];
+        set(clamp((pinch.scale * spreadOf(event.touches)) / pinch.spread), (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+    }, { passive: false });
+    const release = (event: TouchEvent): void => {
+        if (event.touches.length < 2) pinch = null;
+    };
+    parts.viewport.addEventListener('touchend', release);
+    parts.viewport.addEventListener('touchcancel', release);
 }
