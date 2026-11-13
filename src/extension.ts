@@ -80,7 +80,7 @@ function vglPlugin(md: MarkdownIt): void {
             const key = hashOf(source, darkMode);
             const cached = cache.get(key);
 
-            if (cached?.ok) return svgHtml(cached.svg);
+            if (cached?.ok) return svgHtml(source, cached.svg);
             if (cached && !cached.ok) return errorHtml(source, cached.error);
 
             // Not in cache — kick off background render, return placeholder.

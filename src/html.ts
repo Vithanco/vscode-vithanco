@@ -11,19 +11,26 @@ export function escapeHtml(s: string): string {
         .replace(/'/g, '&#39;');
 }
 
+// The graph's id (`vgraph <id>: …`) names the diagram, so src/preview.ts can tell
+// which diagram a block shows when the preview reuses the block for another.
+function blockTag(source: string, kind: string): string {
+    const id = /^\s*vgraph\s+([^\s:]+)\s*:/m.exec(source)?.[1] ?? '';
+    return `<div class="vgraph-block ${kind}" data-graph-id="${escapeHtml(id)}">`;
+}
+
 export function placeholderHtml(source: string): string {
     return (
-        `<div class="vgraph-block vgraph-loading">` +
+        blockTag(source, 'vgraph-loading') +
         `<pre class="vgraph-fallback"><code class="language-vgl">${escapeHtml(source)}</code></pre>` +
         `<div class="vgraph-loading-note">Rendering VGL…</div>` +
         `</div>\n`
     );
 }
 
-export function svgHtml(svg: string): string {
+export function svgHtml(source: string, svg: string): string {
     // The rendered SVG is trusted output from our own WASM engine.
     return (
-        `<div class="vgraph-block vgraph-rendered">` +
+        blockTag(source, 'vgraph-rendered') +
         `<div class="vithanco-zoom-bar">` +
         `<button type="button" class="vithanco-zoom-out" aria-label="Zoom out" title="Zoom out">−</button>` +
         `<button type="button" class="vithanco-zoom-reset" title="Fit to width">Auto</button>` +
@@ -36,7 +43,7 @@ export function svgHtml(svg: string): string {
 
 export function errorHtml(source: string, error: string): string {
     return (
-        `<div class="vgraph-block vgraph-error-block">` +
+        blockTag(source, 'vgraph-error-block') +
         `<pre class="vgraph-error">VGL render error: ${escapeHtml(error)}</pre>` +
         `<pre class="vgraph-fallback"><code class="language-vgl">${escapeHtml(source)}</code></pre>` +
         `</div>\n`
