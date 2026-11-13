@@ -4,9 +4,74 @@
     overflow-x: auto;
 }
 
-.vgraph-block.vgraph-rendered svg {
+.vgraph-block.vgraph-rendered {
+    position: relative;
+    overflow: visible;
+}
+
+/* Zoom (src/zoom.ts). Fit is plain CSS, so it follows the preview's width. */
+.vithanco-zoom-viewport {
+    overflow-x: auto;
+}
+
+.vithanco-zoom-viewport svg {
+    display: block;
+    margin: 0 auto;
     max-width: 100%;
     height: auto;
+}
+
+.vithanco-zoom-fixed .vithanco-zoom-viewport svg {
+    width: var(--vithanco-zoom-width);
+    max-width: none;
+}
+
+/* Hidden until bound, so controls never show without the script behind them. */
+.vithanco-zoom-bar {
+    display: none;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 1;
+    gap: 2px;
+}
+
+.vithanco-zoom-ready .vithanco-zoom-bar {
+    display: flex;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.vithanco-zoom-ready:hover .vithanco-zoom-bar,
+.vithanco-zoom-bar:focus-within {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .vithanco-zoom-ready .vithanco-zoom-bar {
+        opacity: 1;
+    }
+}
+
+.vithanco-zoom-bar button {
+    font: inherit;
+    font-size: 0.85em;
+    line-height: 1.4;
+    padding: 1px 8px;
+    cursor: pointer;
+    color: var(--vscode-button-secondaryForeground, inherit);
+    background: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.2));
+    border: 1px solid var(--vscode-widget-border, transparent);
+    border-radius: 3px;
+}
+
+.vithanco-zoom-bar button:hover {
+    background: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.35));
+}
+
+.vithanco-zoom-reset {
+    min-width: 4em;
+    font-variant-numeric: tabular-nums;
 }
 
 .vgraph-fallback {

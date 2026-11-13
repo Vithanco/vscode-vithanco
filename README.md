@@ -2,7 +2,7 @@
 
 Render [Vithanco Graph Language (VGL)](https://vithanco.com/tools/VGL_GUIDE/index.html) diagrams inside VS Code's built-in Markdown preview.
 
-Any fenced block tagged `vgl` is replaced with the rendered SVG when you open the preview:
+Any fenced block tagged `vgl` is replaced with the rendered SVG when you open the preview. It fits the preview's width; hover it for − and + (or pinch on a trackpad, or ctrl+scroll) to zoom, and click the percentage to fit it again.
 
 ````markdown
 ```vgl
@@ -22,10 +22,10 @@ vgraph decision: IBIS "Should we ship?" {
 
 Two extension points do the heavy lifting:
 
-- `markdown.markdownItPlugins` — a sync plugin in the extension host turns each `vgl` fence into a `<div class="vgraph-block" data-vgl="…">` placeholder.
-- `markdown.previewScripts` — a script bundled into the preview webview boots the VGraph WASM module once, then renders every placeholder in place.
+- `markdown.markdownItPlugins` — the extension host renders each `vgl` fence to SVG with the VGraph WASM engine and embeds it in the preview's HTML. It runs there because the preview's Content Security Policy forbids compiling WebAssembly.
+- `markdown.previewScripts` — a small script in the preview binds each diagram's zoom controls and keeps its zoom while the preview re-renders on every edit.
 
-The `VGraphWasm.wasm` binary is embedded directly into the preview bundle (esbuild `binary` loader). Graphviz layout runs inside that module, so nothing else is bundled for it. **No CDN dependencies, no per-document "allow content" prompts.**
+The `VGraphWasm.wasm` binary is embedded directly into the extension bundle (esbuild `binary` loader). Graphviz layout runs inside that module, so nothing else is bundled for it. **No CDN dependencies, no per-document "allow content" prompts.**
 
 ## Build
 
@@ -57,7 +57,10 @@ Reload VS Code, open a markdown file containing a ```vgl block, and run **Markdo
 vscode-vithanco/
 ├── src/
 │   ├── extension.ts     # markdown-it plugin (host side)
-│   └── preview.ts       # WASM init + DOM render (webview side)
+│   ├── renderer.ts      # WASM init + render (host side)
+│   ├── html.ts          # what a vgl fence becomes in the preview
+│   ├── preview.ts       # binds the zoom controls (webview side)
+│   └── zoom.ts          # zoom, identical in obsidian-vithanco
 ├── styles.css           # contributed via markdown.previewStyles
 ├── VGraphWasm.wasm      # refreshed from ../website/Package/ on build
 ├── esbuild.config.mjs   # bundles host (CJS) and preview (IIFE)

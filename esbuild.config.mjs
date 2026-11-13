@@ -5,11 +5,14 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.argv[2] === 'production';
+// `preview` builds only the preview script, which carries no engine: VGraph's
+// tests use it without an optimized engine to bundle.
+const previewOnly = process.argv[3] === 'preview';
 
 // Refresh the local VGraphWasm.wasm from the monorepo build output, when present.
 const wasmSrc = path.join(__dirname, '../website/Package/VGraphWasm.wasm');
 const wasmDst = path.join(__dirname, 'VGraphWasm.wasm');
-if (fs.existsSync(wasmSrc)) {
+if (!previewOnly && fs.existsSync(wasmSrc)) {
     fs.copyFileSync(wasmSrc, wasmDst);
     console.log('Refreshed VGraphWasm.wasm from ../website/Package/');
 }
@@ -45,11 +48,25 @@ const config = {
     },
 };
 
+// Runs in the preview webview, which the extension host cannot reach.
+const previewConfig = {
+    entryPoints: ['src/preview.ts'],
+    bundle: true,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2020',
+    sourcemap: isProd ? false : 'inline',
+    outfile: 'out/preview.js',
+    logLevel: 'info',
+};
+
+const configs = previewOnly ? [previewConfig] : [config, previewConfig];
+
 if (isProd) {
-    await esbuild.build(config);
+    await Promise.all(configs.map((c) => esbuild.build(c)));
     console.log('Build complete.');
 } else {
-    const ctx = await esbuild.context(config);
-    await ctx.watch();
+    const contexts = await Promise.all(configs.map((c) => esbuild.context(c)));
+    await Promise.all(contexts.map((ctx) => ctx.watch()));
     console.log('Watching for changes...');
 }

@@ -36,6 +36,9 @@
     "markdown.previewStyles": [
       "./styles.css"
     ],
+    "markdown.previewScripts": [
+      "./out/preview.js"
+    ],
     "languages": [
       {
         "id": "vgl",
@@ -51,6 +54,7 @@
   },
   "scripts": {
     "build": "node esbuild.config.mjs production",
+    "build:preview": "node esbuild.config.mjs production preview",
     "typecheck": "tsc --noEmit",
     "watch": "node esbuild.config.mjs",
     "package": "vsce package --no-dependencies"

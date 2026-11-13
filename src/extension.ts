@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { createHash } from 'node:crypto';
 import type MarkdownIt from 'markdown-it';
 import { getRenderer } from './renderer';
+import { errorHtml, placeholderHtml, svgHtml } from './html';
 
 // ─── Cache ───────────────────────────────────────────────────────────────
 // VGL source → rendered SVG (or error string). Keyed by content hash so
@@ -56,40 +57,6 @@ async function renderInBackground(
         inFlight.delete(key);
         scheduleRefresh();
     }
-}
-
-// ─── HTML helpers ────────────────────────────────────────────────────────
-
-function escapeHtml(s: string): string {
-    return s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-function placeholderHtml(source: string): string {
-    return (
-        `<div class="vgraph-block vgraph-loading">` +
-        `<pre class="vgraph-fallback"><code class="language-vgl">${escapeHtml(source)}</code></pre>` +
-        `<div class="vgraph-loading-note">Rendering VGL…</div>` +
-        `</div>\n`
-    );
-}
-
-function svgHtml(svg: string): string {
-    // The rendered SVG is trusted output from our own WASM engine.
-    return `<div class="vgraph-block vgraph-rendered">${svg}</div>\n`;
-}
-
-function errorHtml(source: string, error: string): string {
-    return (
-        `<div class="vgraph-block vgraph-error-block">` +
-        `<pre class="vgraph-error">VGL render error: ${escapeHtml(error)}</pre>` +
-        `<pre class="vgraph-fallback"><code class="language-vgl">${escapeHtml(source)}</code></pre>` +
-        `</div>\n`
-    );
 }
 
 // ─── markdown-it plugin ──────────────────────────────────────────────────
